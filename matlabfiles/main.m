@@ -21,11 +21,11 @@ sd_meas_coord = 3; % m - Standard error of measured coordinates
 sd_meas_abs_vel = 0.5; % m/s - Standard error of measured abs. velocity
 sd_ini_vel = 3; % m/s - Standard error of initial velocity
 sd_ini_coord = 10; % m - Standard error of initial coordinates
-ve_m = 3.53; % m/s
-vn_m = 0.86; % m/s
+ve = 3.53; % m/s
+vn = 0.86; % m/s
 dt = 2; % time difference -> 2 sec between measurements
 %% State variables
-xk = [east_meas north_meas speed_meas speed_meas]';
+xk = [east_meas(1) north_meas(1) ve vn]';
 % Equation 4
 F = zeros(4);
 F(1,3) = 1;
@@ -42,12 +42,28 @@ Q = [ PSD 0 ; 0 PSD];
 QG = G*Q*G';
 %% Equation 12
 Qk = QG * dt + (F*QG + QG*F')*dt^2/2 + F*QG*F'*dt^3/3;
-
 %% Equation 15
-xkn = Tk*xk;
+Qx(1) = cov(xk);
+%% FOR LOOP
+%
 %% Equation 25
-vm = sqrt(ve_m^2 + vn_m^2); % should be equal to speed_meas(1)
+vm = sqrt(ve^2 + vn^2); % should be equal to speed_meas(1)
 %% Equation 26
-H = [1,0, 0,        0;...
+Hk = [1,0, 0,        0;...
     0, 1, 0,        0;...
-    0, 0, ve_m/vm,  vn_m/vm];
+    0, 0, ve/vm,  vn/vm];
+Lk = Hk * xk;
+Rk = cov(Lk);
+for i = 1:2
+    %% Equation 16
+    % Time propagation
+    xk = Tk * xk;
+    Qx = Tk*Qx*Tk' + Qk;
+    %% Equation 17
+    % Gain calculation
+    Kk = Qx * Hk'/(Rk + Hk * Qx * Hk');
+    %% Equation 22
+    Lk = [east_meas(1) north_meas(1) sqrt(ve^2 + vn^2)]';
+    
+    
+end
