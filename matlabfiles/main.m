@@ -9,12 +9,12 @@ east_meas = data_meas(1:25,2);
 north_meas = data_meas(1:25,3);
 speed_meas = data_meas(1:25,4);
 % Import true values from sheet 2
-data_true = xlsread('Measurement.xlsx','True values');
-time_true = data_true(1:25,1);
-east_true = data_true(1:25,2);
-north_true = data_true(1:25,3);
-vel_east_true = data_true(1:25,4);
-vel_north_true = data_true(1:25,5);
+% data_true = xlsread('Measurement.xlsx','True values');
+% time_true = data_true(1:25,1);
+% east_true = data_true(1:25,2);
+% north_true = data_true(1:25,3);
+% vel_east_true = data_true(1:25,4);
+% vel_north_true = data_true(1:25,5);
 %% A priori statistics
 PSD = 0.01; % - PSD (power spectral density) of the random acceleration
 sd_meas_coord = 3; % m - Standard error of measured coordinates
@@ -23,4 +23,23 @@ sd_ini_vel = 3; % m/s - Standard error of initial velocity
 sd_ini_coord = 10; % m - Standard error of initial coordinates
 vel_east = 3.53; % m/s
 vel_north = 0.86; % m/s
-%% 
+dt = 2; % time difference -> 2 sec between measurements
+%% State variables
+x =[east_meas north_meas speed_meas]';
+% Equation 4
+F = zeros(4);
+F(1,3) = 1;
+F(2,4) = 1;
+G = zeros(4,2);
+G(3,1) = 1;
+G(4,2) = 1;
+% u = [acc_east; acc_north];
+%% Equation 5
+T = eye(length(F)) + dt * F;
+%% Equation 9
+Q = [ PSD 0 ; 0 PSD];
+%% Equation 11
+QG = G*Q*G';
+%% Equation 12
+Qk = QG * dt + (F*QG + QG*F')*dt^2/2 + F*QG*F'*dt^3/3;
+%% Equation 15
