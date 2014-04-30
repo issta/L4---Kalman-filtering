@@ -1,5 +1,5 @@
 %% Kalman Filter
-clear all; clc;
+clear all;
 addpath(['/Users/kevin/SkyDrive/KTH Work/Period 4 2014/GNSS/Labs/L4 ',...
     '- Kalman filtering/']);
 % Import measured values from sheet 1
@@ -54,7 +54,7 @@ Hk = [1,0, 0,        0;...
     0, 0, ve/vm,  vn/vm];
 Lk = Hk * xk;
 Rk = cov(Lk);
-for i = 1:2
+for i = 1:24
     %% Equation 16
     % Time propagation
     xk = Tk * xk;
@@ -62,8 +62,10 @@ for i = 1:2
     %% Equation 17
     % Gain calculation
     Kk = Qx * Hk'/(Rk + Hk * Qx * Hk');
+	%% Equation 18
+	% Measurement update
+	xk = xk + Kk*[Lk-Hk*xk];
     %% Equation 22
-    Lk = [east_meas(1) north_meas(1) sqrt(ve^2 + vn^2)]';
-    
-    
+    Lk = [east_meas(i) north_meas(i) sqrt(ve^2 + vn^2)]';
+    xplot(:,i) = xk(:);
 end
