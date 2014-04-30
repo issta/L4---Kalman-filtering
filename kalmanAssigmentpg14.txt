@@ -1,0 +1,46 @@
+                                                                                  Sheet nr. 14
+
+
+                     AH2923 Global Navigation Satellite Systems
+
+
+                                  Kalman Filtering
+
+Use Kalman filter to compute 2D position and velocity of a moving vehicle. Use constant
+velocity (PV) model. The position and absolute value of velocity of the vehicle is measured in
+5 s intervals.
+
+A priori statistics:
+   - PSD (power spectral density) of the random acceleration:                    0.1 m 2s −3
+   - Standard error of measured coordinates:                                     3m
+   - Standard error of measured abs. velocity:                                   0.5 m/s
+   - Standard error of initial velocity:                                         0.01 m/s
+   - Standard error of initial coordinates:                                      0.1 m
+
+Measured coordinates:
+         Time [s]                            e [m]                           n [m]
+             0                                 0                               0
+             5                              13.254                          29.597
+            10                              14.848                          44.564
+            15                              26.593                          71.133
+            20                              28.432                          96.581
+            25                              38.436                         115.297
+            30                              51.215                         149.494
+            35                              49.512                         165.184
+            40                              66.631                         185.472
+            45                              72.941                         209.636
+            50                              85.394                         238.218
+
+Initial velocity:          ve = 1.71 m/s, vn = 4.70 m/s.
+Measured velocity:         5 m/s (all the time)
+
+The report should include
+   - code
+   - filtered coordinates, velocities and their standard errors
+   - plot of the measured and filtered trajectory.
+
+
+
+
+Stockholm 2010-01-21                                                          Milan Horemuž
+
