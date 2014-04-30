@@ -1,7 +1,7 @@
 %% Kalman Filter
 clear all; clc;
 addpath(['/Users/kevin/SkyDrive/KTH Work/Period 4 2014/GNSS/Labs/L4 ',...
-'- Kalman filtering/']);
+    '- Kalman filtering/']);
 % Import measured values from sheet 1
 data_meas = xlsread('Measurement.xlsx');
 time_meas = data_meas(1:25,1);
@@ -21,11 +21,11 @@ sd_meas_coord = 3; % m - Standard error of measured coordinates
 sd_meas_abs_vel = 0.5; % m/s - Standard error of measured abs. velocity
 sd_ini_vel = 3; % m/s - Standard error of initial velocity
 sd_ini_coord = 10; % m - Standard error of initial coordinates
-vel_east = 3.53; % m/s
-vel_north = 0.86; % m/s
+ve_m = 3.53; % m/s
+vn_m = 0.86; % m/s
 dt = 2; % time difference -> 2 sec between measurements
 %% State variables
-x =[east_meas north_meas speed_meas]';
+xk = [east_meas north_meas speed_meas speed_meas]';
 % Equation 4
 F = zeros(4);
 F(1,3) = 1;
@@ -35,11 +35,19 @@ G(3,1) = 1;
 G(4,2) = 1;
 % u = [acc_east; acc_north];
 %% Equation 5
-T = eye(length(F)) + dt * F;
+Tk = eye(length(F)) + dt * F;
 %% Equation 9
 Q = [ PSD 0 ; 0 PSD];
 %% Equation 11
 QG = G*Q*G';
 %% Equation 12
 Qk = QG * dt + (F*QG + QG*F')*dt^2/2 + F*QG*F'*dt^3/3;
+
 %% Equation 15
+xkn = Tk*xk;
+%% Equation 25
+vm = sqrt(ve_m^2 + vn_m^2); % should be equal to speed_meas(1)
+%% Equation 26
+H = [1,0, 0,        0;...
+    0, 1, 0,        0;...
+    0, 0, ve_m/vm,  vn_m/vm];
