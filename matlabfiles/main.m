@@ -9,12 +9,12 @@ east_meas = data_meas(1:25,2);
 north_meas = data_meas(1:25,3);
 speed_meas = data_meas(1:25,4);
 % Import true values from sheet 2
-% data_true = xlsread('Measurement.xlsx','True values');
-% time_true = data_true(1:25,1);
-% east_true = data_true(1:25,2);
-% north_true = data_true(1:25,3);
-% vel_east_true = data_true(1:25,4);
-% vel_north_true = data_true(1:25,5);
+data_true = xlsread('Measurement.xlsx','True values');
+time_true = data_true(1:25,1);
+east_true = data_true(1:25,2);
+north_true = data_true(1:25,3);
+vel_east_true = data_true(1:25,4);
+vel_north_true = data_true(1:25,5);
 %% A priori statistics
 PSD = 0.01; % - PSD (power spectral density) of the random acceleration
 sd_meas_coord = 3; % m - Standard error of measured coordinates
@@ -26,6 +26,7 @@ vn = 0.86; % m/s
 dt = 2; % time difference -> 2 sec between measurements
 %% State variables
 xk = [east_meas(1) north_meas(1) ve vn]';
+xkoriginal = xk;
 % Equation 4
 F = zeros(4);
 F(1,3) = 1;
@@ -54,18 +55,29 @@ Hk = [1,0, 0,        0;...
     0, 0, ve/vm,  vn/vm];
 Lk = Hk * xk;
 Rk = cov(Lk);
-for i = 1:24
+for i = 1:25
     %% Equation 16
     % Time propagation
-    xk = Tk * xk;
-    Qx = Tk*Qx*Tk' + Qk;
+    xk(:,i+1) = Tk * xk(:,i);
+    Qx = Tk * Qx * Tk' + Qk;
     %% Equation 17
     % Gain calculation
     Kk = Qx * Hk'/(Rk + Hk * Qx * Hk');
 	%% Equation 18
 	% Measurement update
-	xk = xk + Kk*[Lk-Hk*xk];
+	xk(:,i+1) = xk(:,i) + Kk*[Lk-Hk*xk(:,i)];
+    %% Equation 19
+    Qx = [eye(length(Kk*Hk))-Kk*Hk]*Qx;
     %% Equation 22
-    Lk = [east_meas(i) north_meas(i) sqrt(ve^2 + vn^2)]';
-    xplot(:,i) = xk(:);
+%     Lk = [east_meas(i) north_meas(i) sqrt(ve^2 + vn^2)]';
+    xplot(:,i+1) = xk(:,i);
 end
+clf;
+x1 = xplot(1,:); % final values
+y1 = xplot(2,:); % final values
+x2 = xkoriginal(1,:);
+y2 = xkoriginal(2,:);
+plot(x1,y1,x2,y2)
+% hold on
+% plot(east_meas,north_meas,'r')
+% plot(east_true,north_true,'b')
