@@ -28,7 +28,9 @@ ve = 3.53; % m/s
 vn = 0.86; % m/s
 dt = 2; % time difference -> 2 sec between measurements
 %% State variables
-xk = [meas.east(1) meas.north(1) ve vn]';
+xk = [meas.east(1) meas.north(1) ve vn];
+xk = padarray(xk,24,0,'post');
+xk = xk';
 
 % Equation 4
 F = zeros(4);
@@ -47,7 +49,7 @@ QG = G*Q*G';
 %% Equation 12
 Qk = QG * dt + (F*QG + QG*F')*dt^2/2 + F*QG*F'*dt^3/3;
 %% Equation 15
-Qx(1) = cov(xk);
+Qx = cov(xk(:,1));
 %% FOR LOOP
 %
 %% Equation 25
@@ -56,36 +58,38 @@ vm = sqrt(ve^2 + vn^2); % should be equal to speed_meas(1)
 Hk = [1,0, 0,        0;...
     0, 1, 0,        0;...
     0, 0, ve/vm,  vn/vm];
-Lk = Hk * xk;
+% Lk = Hk * xk;
+Lk = [meas.east(1) meas.north(1)...
+    sqrt((xk(3,1))^2 + (xk(4,1))^2)]';
 Rk = cov(Lk);
-for i=1:25
-    %% Equation 16
-    % Time propagation
-    xk(:,i+1) = Tk * xk(:,i);
-    Qx = Tk * Qx * Tk' + Qk;
-    %% Equation 17
-    % Gain calculation
-    Kk = Qx * Hk'/(Rk + Hk * Qx * Hk');
-    %% Equation 18
-    % Measurement update
-    xk(:,i+1) = xk(:,i) + Kk*[Lk-Hk*xk(:,i)];
-    %% Equation 19
+%%
+for i=1:24
+    xk(:,i+1) = Tk * xk(:,i); % Equation 16 Time propagation
+    Qx = Tk * Qx * Tk' + Qk; % Equation 16
+    Kk = Qx * Hk'*inv([Rk + Hk * Qx * Hk']); % Equation 17 Gain
+    xk(:,i+1) = xk(:,i) + Kk*[ Lk - Hk * xk(:,i) ]; % Equation18 
+%     Measurement update
+    % Equation 19
     Qx = [eye(length(Kk*Hk))-Kk*Hk]*Qx;
-    %% Equation 22
-    Lk = [meas.east(i) meas.north(i) sqrt(ve^2 + vn^2)]';
-%     Hk = inv(xk(:,i))*Lk;
+    % Equation 22
+    Lk = [meas.east(i) meas.north(i)...
+        sqrt((xk(3,i))^2 + (xk(4,i))^2)]';
+    Hk = inv(xk(:,i))*Lk;
     final.xplot(:,i+1) = xk(:,i);
 end
+%% Smoothing
+
+%% Plot
 final.x1 = xk(1,:)'; % final values
 final.y1 = xk(2,:)'; % final values
 meas.x2 = meas.east; % original
 meas.y2 = meas.north; % original
 true.x3 = true.east; % true
 true.y3 = true.north; % true
-final.plot = plot(final.x1,final.y1,'.','color','r');
+final.plot = plot(final.x1,final.y1,'.','color','b');
 hold on;
-originalplot = plot(meas.x2,meas.y2,'-.','color','r');
-true.plot = plot(true.x3,true.y3,'.');
+originalplot = plot(meas.x2,meas.y2,'.','color','r');
+true.plot = plot(true.x3,true.y3,'-');
 legend([final.plot,originalplot,true.plot],...
     'Final','Original','True',...
     'location','best');
