@@ -3,24 +3,24 @@ clear all;clc;close all
 addpath(['/Users/kevin/SkyDrive/KTH Work/',...
     'Period 4 2014/GNSS/Labs/L4 ',...
     '- Kalman filtering/']);
-% Import measured values from sheet 1
-data_meas = xlsread('Measurement.xlsx');
-time_meas = data_meas(1:25,1);
-east_meas = data_meas(1:25,2);
-north_meas = data_meas(1:25,3);
-speed_meas = data_meas(1:25,4);
+%% Import measured values from sheet 1
+data.s1 = xlsread('Measurement.xlsx');
+meas.time = data.s1(1:25,1);
+meas.east = data.s1(1:25,2);
+meas.north = data.s1(1:25,3);
+meas.speed = data.s1(1:25,4);
 % Import true values from sheet 2
-data_true = xlsread('Measurement.xlsx','True values');
-time_true = data_true(1:25,1);
-east_true = data_true(1:25,2);
-north_true = data_true(1:25,3);
-vel_east_true = data_true(1:25,4);
-vel_north_true = data_true(1:25,5);
+data.s2 = xlsread('Measurement.xlsx','True values');
+true.time = data.s2(1:25,1);
+true.east = data.s2(1:25,2);
+true.north = data.s2(1:25,3);
+true.vel_east = data.s2(1:25,4);
+true.vel_north = data.s2(1:25,5);
 %% A priori statistics
 PSD = 0.01; % - PSD (power spectral density) of the
 % random acceleration
-sd_meas_coord = 3; % m - Standard error of measured coordinates
-sd_meas_abs_vel = 0.5; % m/s - Standard error of measured
+meas.sd_coord = 3; % m - Standard error of measured coordinates
+meas.sd_abs_vel = 0.5; % m/s - Standard error of measured
 % abs. velocity
 sd_ini_vel = 3; % m/s - Standard error of initial velocity
 sd_ini_coord = 10; % m - Standard error of initial coordinates
@@ -28,7 +28,7 @@ ve = 3.53; % m/s
 vn = 0.86; % m/s
 dt = 2; % time difference -> 2 sec between measurements
 %% State variables
-xk = [east_meas(1) north_meas(1) ve vn]';
+xk = [meas.east(1) meas.north(1) ve vn]';
 
 % Equation 4
 F = zeros(4);
@@ -72,20 +72,21 @@ for i=1:25
     %% Equation 19
     Qx = [eye(length(Kk*Hk))-Kk*Hk]*Qx;
     %% Equation 22
-    Lk = [east_meas(i) north_meas(i) sqrt(ve^2 + vn^2)]';
-    xplot(:,i+1) = xk(:,i);
+    Lk = [meas.east(i) meas.north(i) sqrt(ve^2 + vn^2)]';
+%     Hk = inv(xk(:,i))*Lk;
+    final.xplot(:,i+1) = xk(:,i);
 end
-x1 = xk(1,:); % final values
-y1 = xk(2,:); % final values
-x2 = east_meas;
-y2 = north_meas;
-x3 = east_true;
-y3 = north_true;
-finalplot = plot(x1,y1,'.','color','r');
+final.x1 = xk(1,:)'; % final values
+final.y1 = xk(2,:)'; % final values
+meas.x2 = meas.east; % original
+meas.y2 = meas.north; % original
+true.x3 = true.east; % true
+true.y3 = true.north; % true
+final.plot = plot(final.x1,final.y1,'.','color','r');
 hold on;
-originalplot = plot(x2,y2,'-.','color','r');
-trueplot = plot(x3,y3,'.');
-legend([finalplot,originalplot,trueplot],...
+originalplot = plot(meas.x2,meas.y2,'-.','color','r');
+true.plot = plot(true.x3,true.y3,'.');
+legend([final.plot,originalplot,true.plot],...
     'Final','Original','True',...
     'location','best');
 hold off;
