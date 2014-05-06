@@ -88,14 +88,16 @@ for i=1:25
     final.xplot(:,i+1) = xk(:,i);
 end
 %% Smoothing
-% xkhat = zeros(4,25);
-% nStep = 25;
-% Qxkhat = zeros(4,4,26)
-% for i = 1:(nStep-1)
-%     Dk = Qx*Tk'*inv(Qxm);
-%     xkhat(:,nStep-i) = xk(:,nStep) + Dk*[xkhat(:,nStep) - xkm(:,nStep)];
-%     Qxkhat(:,:,nStep-i) = Qx + Dk*[Qxkhat(:,:,nStep) - Qxm(:,:,nStep)]*Dk'
-% end
+xkhat(:,25) = xk(:,end);
+nStep = 25;
+count = nStep;
+Qxkhat(:,:,25) = Qx(:,:,end);
+for i = 1:(nStep-1)
+    Dk = Qx(:,:,count+1)*Tk'*inv(Qxm_predicted(:,:,count));
+    xkhat(:,count-1) = xk(:,count) + Dk*[xkhat(:,count) - xkm_predicted(:,count+1)];
+    Qxkhat(:,:,count-1) = Qx(:,:,count+1) + Dk*[Qxkhat(:,:,count) - Qxm_predicted(:,:,count)]*Dk';
+    count = count - 1;
+end
 [x_s, e_p, n_p] = KalmanFilter;
 %% Plot
 final.x1 = xk(1,:)'; % final values
@@ -106,13 +108,14 @@ true.x3 = true.east; % true
 true.y3 = true.north; % true
 final.plot = plot(final.x1,final.y1,'b');
 hold on;
-originalplot = plot(meas.x2,meas.y2,'r');
-hisplot = plot(e_p,n_p,'g');
+xk_smooth = plot(xkhat(1,:),xkhat(2,:),'c');
+% originalplot = plot(meas.x2,meas.y2,'r');
+% hisplot = plot(e_p,n_p,'g');
 hisSmoothing = plot(x_s(1,:),x_s(2,:),'m');
 true.plot = plot(true.x3,true.y3,'-','color','k');
-legend([final.plot,originalplot,true.plot,hisplot,hisSmoothing],...
-    'Final','Original','True','His predictions','His Smoothing',...
-    'location','best');
+% legend([final.plot,originalplot,true.plot,hisplot,hisSmoothing,xk_smooth],...
+%     'Final','Original','True','His predictions','His Smoothing',...
+%     'My Smoothing','location','best');
 % hold off;
 
 % hold on plot(east_meas,north_meas,'r')
