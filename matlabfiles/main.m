@@ -31,7 +31,7 @@ dt = 2; % time difference -> 2 sec between measurements
 xk = [meas.east(1) meas.north(1) ve vn];
 xk = padarray(xk,24,0,'post');
 xk = xk';
-
+%%
 % Equation 4
 F = zeros(4);
 F(1,3) = 1;
@@ -51,34 +51,48 @@ Qk = QG * dt + (F*QG + QG*F')*dt^2/2 + F*QG*F'*dt^3/3;
 %% Equation 15
 Qx = cov(xk(:,1));
 %% FOR LOOP
-%
-%% Equation 25
-vm = sqrt(ve^2 + vn^2); % should be equal to speed_meas(1)
-%% Equation 26
-Hk = [1,0, 0,        0;...
-    0, 1, 0,        0;...
-    0, 0, ve/vm,  vn/vm];
-% Lk = Hk * xk;
-Lk = [meas.east(1) meas.north(1)...
-    sqrt((xk(3,1))^2 + (xk(4,1))^2)]';
-Rk = cov(Lk);
-%%
-for i=1:24
-    xk(:,i+1) = Tk * xk(:,i); % Equation 16 Time propagation
-    Qx = Tk * Qx * Tk' + Qk; % Equation 16
-    Kk = Qx * Hk'*inv([Rk + Hk * Qx * Hk']); % Equation 17 Gain
-    xk(:,i+1) = xk(:,i) + Kk*[ Lk - Hk * xk(:,i) ]; % Equation18 
-%     Measurement update
-    % Equation 19
-    Qx = [eye(length(Kk*Hk))-Kk*Hk]*Qx;
-    % Equation 22
+for i=1:25
+    %% Equation 25
+    %% Equation 26
+    % Lk = Hk * xk;
     Lk = [meas.east(i) meas.north(i)...
-        sqrt((xk(3,i))^2 + (xk(4,i))^2)]';
-    Hk = inv(xk(:,i))*Lk;
+        meas.speed(i)]';
+    if i == 1
+        Lktilde = Lk + [sd_ini_coord, sd_ini_coord, sd_ini_vel]';
+    else
+        Lktilde = Lk +[meas.sd_coord, meas.sd_coord, meas.sd_abs_vel]';
+    end
+    Rk = var(Lktilde);
+    %
+    xkm(:,i+1) = Tk * xk(:,i); % Equation 16 Time propagation
+    Qx = cov(xkm(:,i));
+    Qxm = Tk * Qx * Tk' + Qk; % Equation 16
+    vm = sqrt(xkm(3,i+1)^2 + xkm(4,i+1)^2); % should be equal to speed_meas(1)
+    Hk = [1,0, 0,        0;...
+        0, 1, 0,        0;...
+        0, 0, xkm(3,i+1)/vm,  xkm(4,i+1)/vm];
+    hkm = [xkm(1,i+1) xkm(2,i+1) sqrt(xkm(3,i+1)^2 + xkm(4,i+1)^2)]';
+    Kk = Qxm * Hk'*inv([Rk + Hk * Qxm * Hk']); % Equation 17 Gain
+    xk(:,i+1) = xkm(:,i+1) + Kk*[ Lktilde - hkm ]; % Equation18
+    %     Measurement update
+    % Equation 19
+    Qx = [eye(length(Kk*Hk))-Kk*Hk]*Qxm;
+    % Equation 22
+    %     Lk = [meas.east(i) meas.north(i)...
+    %         sqrt((xk(3,i))^2 + (xk(4,i))^2)]';
+    
+    %     Hk = inv(xk(:,i))*Lk;
     final.xplot(:,i+1) = xk(:,i);
 end
 %% Smoothing
-
+xkhat = zeros(4,25);
+nStep = 25;
+Qxkhat = zeros(4,4,26)
+for i = 1:(nStep-1)
+    Dk = Qx*Tk'*inv(Qxm);
+    xkhat(:,nStep-i) = xk(:,nStep) + Dk*[xkhat(:,nStep) - xkm(:,nStep)];
+    Qxkhat(:,:,nStep-i) = Qx + Dk*[Qxkhat(:,:,nStep) - Qxm(:,:,nStep)]*Dk'
+end
 %% Plot
 final.x1 = xk(1,:)'; % final values
 final.y1 = xk(2,:)'; % final values
@@ -86,9 +100,9 @@ meas.x2 = meas.east; % original
 meas.y2 = meas.north; % original
 true.x3 = true.east; % true
 true.y3 = true.north; % true
-final.plot = plot(final.x1,final.y1,'.','color','b');
+final.plot = plot(final.x1,final.y1,'color','g');
 hold on;
-originalplot = plot(meas.x2,meas.y2,'.','color','r');
+originalplot = plot(meas.x2,meas.y2,'color','r');
 true.plot = plot(true.x3,true.y3,'-');
 legend([final.plot,originalplot,true.plot],...
     'Final','Original','True',...
