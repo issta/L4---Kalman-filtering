@@ -1,0 +1,350 @@
+                                         Kalman filtering
+
+Linearised position-velocity model
+
+A dynamic process can be generally described by the following matrix differential equation
+
+                                    x (t) = F (t) x (t) + G (t) u (t) ,
+                                                                                                   (1)
+
+
+where x is the state vector, F is the system dynamic matrix, G is distribution matrix, t is time and u
+is a vector forcing function, whose elements are white noise.
+In the case of the position-velocity model we assume that a vehicle is moving with a constant
+velocity and that the velocity vector is changing randomly. The state vector contains position vector
+(coordinates) and velocity vector:
+
+                                                                                   T
+                                  x = [e n v e          v n ] = pT
+                                                             T
+                                                                           vT 
+                                                                                                   (2)
+
+The kinematic model:
+                                                  
+                                                  p=v
+                                                                                                    (3)
+                                                  v = 0 + ωa
+                                                  
+
+
+The matrixes from equation (1) become:
+
+                              0     0    1    0       0          0
+                              0                       0          0        ω
+                                                                      , u =  ae 
+                                     0    0    1
+                            F=                  , G = 
+                                                                             ω                    (4)
+                              0     0    0    0       1          0        an 
+                                                                  
+                              0     0    0    0       0          1
+
+
+The discrete solution of the differential equation (1) can be generally written as:
+
+                                          x k = Tk −1,k x k −1 + w k −1,k                           (5)
+
+
+where subscript k is a short notation of tk, which is time of a discrete epoch k and
+
+                                                  1          1        1
+                      Tk −1,k = eF ⋅Δt ≈ I + FΔt + F 2 Δt 2 + F3Δt 3 + F 4 Δt 4 +                  (6)
+                                                  2          3!       4!
+
+is the transition matrix between epochs k and k+1, where Δt = t k − t k −1 and
+
+
+2014-04-29 23:04:00                                      1                                 Milan Horemuž
+                                                          k
+                                                 wk =     T
+                                                         k −1
+                                                                k −1,τ   G τ u τ dτ                                  (7)
+
+
+is the driven response at epoch k due to the presence of the white noise input during interval Δt .
+The covariance of wk, can be expressed as:
+
+
+                      Q k = E  w k −1,k w T−1,k  =
+                                          k     
+                        k k                                                                          
+                      E    T ( k − 1,s ) G ( s ) u ( s ) u T ( t ) G T ( t ) TT ( k − 1, t ) dt ds  =            (8)
+                         k −1 k −1                                                                   
+                       k    k
+
+                         T ( k − 1,s ) G ( s ) E u ( s ) u ( t ) G ( t ) T ( k − 1, t ) dt ds
+                                                                 T             T        T
+                                                                  
+                      k −1 k −1
+
+
+                                                                      q               0
+                                         E  u ( s ) uT ( t )  = Q =  ae                                           (9)
+                                                             
+                                                                      0              q an 
+                                                                                           
+
+qae and qan are power spectral density (PSD) of the random acceleration. The unit of qae and qan is
+ m 2 
+ 2        . Using Equation (6), the solution of the integral (8) can be approximated by following
+
+  s Hz   
+expansion:
+
+
+                                                                               Δt 2
+                                                 ≈ Q G Δt + ( FQ G + Q G F ) 2 +
+                                                 
+                                               T                                               T
+                           Q k = E  w k −1,k wk −1,k
+
+                                                                   3
+                                                              2 Δt
+                           + F 2Q G + 2FQ G F T + Q G ( F T ) 
+                                                               6 +                                               (10)
+                                                              
+                                                                                   4
+                           +F 3Q + 3FQ ( F T )2 + 3F 2Q F T + Q ( F T )3  Δt + 
+                                 G            G              G       G        24
+                                                                              
+where
+                                                        QG = GQGT                                                  (11)
+
+
+Since, in the case of our PV model F n = 0, n ≥ 2 , the process noise covariance matrix will become
+exactly:
+
+
+                                                                             Δt 2          Δt 3
+                                  Qk = QG Δt + ( FQG + QG FT )                    + FQG FT                         (12)
+                                                                              2             3
+
+Taking into account (4):
+
+
+
+
+2014-04-29 23:04:00                                              2                                          Milan Horemuž
+                                     q e Δt 3                q e Δt 2            
+                                     3               0                      0 
+                                                                  2
+                                                                                 
+                                                  q n Δt 3              q n Δt 2 
+                                     0                3
+                                                                  0
+                                                                             2 
+                               Qk =         2
+                                                                                              (13)
+                                     q e Δt          0         q e Δt       0 
+                                     2                                           
+                                                                                 
+                                     0            q n Δt 2
+                                                                  0      q n Δt 
+                                    
+                                                     2                           
+                                                                                  
+
+The transition matrix T can be computed by equation (6) as:
+
+                                                         1      0 Δt 0 
+                                                         0      1 0 Δt 
+                                 Tk −1,k   = I + Fk Δt =                                     (14)
+                                                         0      0 1 0
+                                                                       
+                                                         0      0 0 1
+
+
+
+Kalman filtering
+
+The discrete Kalman filter algorithm has the following steps:
+
+1. Initialisation:
+                                             x 0 , Q x 0 = var[x 0 ]                           (15)
+2. Time propagation
+                           x − = Tk −1,k x k −1 , Q − = Tk −1,k Q x,k −1TkT−1,k + Q k
+                             k                      x,k                                        (16)
+
+3. Gain calculation:
+                                                                            −1
+                                  K k = Q− HT  R k + H k Q− HT 
+                                         x,k k            x,k k                              (17)
+
+4. Measurement update
+                                                        
+                                      x k = x − + K k L k − h k (x − )                       (18)
+                                              k                    k 
+
+
+5. Covariance update
+                                           Qx,k = [ I − K k H k ] Qx,k
+                                                                   −
+                                                                                               (19)
+
+
+                                                                                       
+The tilde symbol (~) denotes measured and minus in superscript predicted quantity. L k is the
+vector of observations with covariance matrix R. The observation equations (generally non-linear)
+can be written as:
+
+                                                   L = h( x )                                  (20)
+
+H is the design matrix:
+2014-04-29 23:04:00                                       3                             Milan Horemuž
+                                                           ∂h
+                                                  H=                                              (21)
+                                                           ∂x x = x−
+                                                                   k
+
+
+
+
+If we measure position and absolute value of the velocity vector, then the observation equations are
+as follows:
+
+                                                                                       T
+                                 L k = h k (x k ) = e k        nk     v ek + v 2 
+                                                                         2
+                                                                                                  (22)
+                                                                               nk
+                                                                                   
+
+or introducing measured values and their random errors ε:
+
+
+                                               
+                                              e          e     
+                                                                 
+                                      L + ε = n + ε = 
+                                                          n                                    (23)
+                                               
+                                              v        2       
+                                                             2
+                                                         ve + vn 
+                                                                 
+
+The last equation in (23)
+
+
+                                           v = v + ε v = ve + v2
+                                                         2
+                                                               n                                  (24)
+
+
+is not linear, therefore it is linearised around the predicted values v e and v −
+                                                                        −
+                                                                                n
+
+
+
+
+                                                ∂v −      ∂v −
+                                     v = v− +      −
+                                                     Δve + − Δv n + 
+                                                ∂v e      ∂v n                                    (25)
+                                      −         − 2          − 2
+                                     v = (v ) + (v )
+                                                e            n
+
+
+
+Design matrix (21) contains partial derivatives of h(x) (Equation (20)) with respect to all variables
+in the state vector:
+
+
+
+
+2014-04-29 23:04:00                                         4                              Milan Horemuž
+                                                                   
+                                             1 0          0     0
+                                                                   
+                                         H = 0 1          0     0                            (26)
+                                                           −
+                                                           ve    v− 
+                                             0 0                 n
+                                                                    
+                                                          v−    v− 
+                                                                                    T
+                              h k (x k ) = e k
+                                     −        −    −
+                                                  nk       (v ek ) 2 + (v − ) 2 
+                                                              −
+                                                                                               (27)
+                                                                         nk
+                                                                                
+
+
+
+Smoothing
+After the last observation we get an estimation of the state vector denoted as x N , and covariance
+matrix Q x,N . The smoothed estimation for the previous epochs is given by
+
+                                      x k = x k + D k  x k +1 − x −+1 
+                                      ˆ               ˆ           k                          (28)
+
+                                       D k = Q x,k TkT−1,k ( Q − +1 )
+                                                                        −1
+                                                               x,k                             (29)
+
+and the covariance matrix of the smoothed state vector:
+                                ˆ                   ˆ
+                                Qx,k = Qx,k + D k Qx,k +1 − Q− +1  DT                        (30)
+                                                             x,k    k
+
+
+
+
+2014-04-29 23:04:00                                    5                                Milan Horemuž
+Kalman filter loop
+
+
+
+
+                             Define T and Qk
+
+
+
+                             Initial estimate of
+                                   x and Qx
+
+
+
+
+                             x = Tx
+                             Q x = TQ x T T + Q k
+
+
+
+
+        Q x = [ I − KH] Qx                              K = Q x H T  R + HQ x H T 
+                                                                                       −1
+                                                                                  
+
+
+
+
+                                         
+                             x = x + K  L − h( x ) 
+                                                   
+
+
+
+
+2014-04-29 23:04:00                         6                                   Milan Horemuž
+References
+
+Brown R., G., Whang, P., Y., C. 1992. Introduction to random signals and applied Kalman filtering.
+Wiley & Sons, New York, Chichester, Toronto, Brisbane, Singapore.
+
+Farrell,J.A., Barth M., (1999). The Global Positioning System & Inertial Navigation. McGraw-Hill,
+New York
+
+Jekeli, Ch. (2001); Inertial Navigation Systems with Geodetic Applications. Walter de Gruyter,
+Berlin, New York.
+
+
+
+
+2014-04-29 23:04:00                              7                                     Milan Horemuž
+

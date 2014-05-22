@@ -1,0 +1,127 @@
+%!TEX root = /Users/kevin/SkyDrive/KTH Work/Period 4 2014/GNSS/Labs/L4 - Kalman filtering/main.tex
+
+\section{Methodology} 
+
+% (fold)
+\label{sec:methodology}
+
+% Describe the methods and instruments used to solve the problem. 
+Matlab was used to solve for the following parameters and all of the following equations were taken from the technical report: Kalman Filtering.\cite{milanGPS} 
+The steps and equations from the Kalman filtering algorithm are documented in the Matlab code. 
+We start off with the matrix differential equation,
+\begin{equation}
+	\dot{\+x} (t) = \+F (t) x (t) + \+G (t) \+u (t) 
+	\label{eq:eq1}
+\end{equation} % (eq:eq1)
+where $\+x = [${\rmfamily e~n~v$_e$~v$_n$}$]^{\mathrm{T}}$, the east and north positions and their velocity components. \+F, \+G, and \+u are given by,
+\begin{equation}
+	\begin{array}{ccc}
+		\+F= \left[
+		\begin{matrix}
+			0 & 0 & 1 & 0 \\
+			0 & 0 & 0 & 1 \\
+			0 & 0 & 0 & 0 \\
+			0 & 0 & 0 & 0 \\
+		\end{matrix}
+		\right] & 
+		\+G = \left[
+		\begin{matrix}
+			0 & 0 \\
+			0 & 0 \\
+			1 & 0 \\
+			0 & 1 \\
+		\end{matrix}
+		\right] & 
+		\+u = \left[
+		\begin{matrix}
+			\omega_{ae} \\
+			\omega_{an} \\
+		\end{matrix}
+		\right] 
+	\end{array}
+\end{equation}
+We do not know \+u because it represents white noise.  The discrete solution to Equation~\eqref{eq:eq1} is
+\begin{equation}
+	\+x_k = \+T_{k-1,k}\+x_{k-1} + \+w_{k-1,k}
+	\label{eq:discreteSolutionToeq1}
+\end{equation} % (eq:discretesolutiontoeq1)
+where values of $k$ represent discretization of time. The transition matrix, $\+T_{k-1,k}$, can be approximated by,
+\begin{equation}
+	\+T_{k-1,k} = \+I + \+F_{k} \Delta t = \left[
+			\begin{matrix}
+				1 & 0 & \Delta t & 0 \\
+				0 & 1 & 0           & \Delta t \\
+				0 & 0 & 1           & 0 \\
+				0 & 0 & 0           & 1 \\
+			\end{matrix}
+			\right]
+	\label{eq:transitionMatrix}
+\end{equation} % (eq:transitionmatrix)
+The covariance of $\+w_k$, $\+Q_k$, is evaluated by use of the power spectral density (PSD) of the random acceleration, which are initially given. We can now represent the covariance of $\+w_k$ as,
+\begin{equation}
+	\+Q_k = \+Q_{G} \Delta t + (\+F \+Q_{G} + \+Q_{G} \+F^{\mathrm{T}})\frac{\Delta t^2}{2}
+	+ \+F \+Q_{G} \+F^{\mathrm{T}} \frac{\Delta t^{3}}{3}
+	\label{eq:eq12}
+\end{equation} % (eq:covarianceqk)
+where
+\begin{equation}
+	\begin{array}{cc}
+		\+Q_{G} = \+G\+Q\+G^{\mathrm{T}} & \+Q = \left[
+		\begin{matrix}
+		q_{ae} 	& 0 		\\
+		0		& q_{an} 	\\
+		\end{matrix}
+		\right]
+	\end{array}
+	\label{eq:eq11}
+\end{equation} % (eq:q_g)
+
+
+\subsection{Kalman Filter} % (fold)
+\label{sub:kalman_filter}
+The main steps of the discrete Kalman Filter algorithm are:
+\begin{enumerate}
+	\item Initialization:
+	\begin{equation}
+		\+x_0,~~\+Q_{x0} = \mathrm{var}[x_0]
+		\label{eq:eq15}
+	\end{equation} % (eq:eq15)
+	\item Time propagation
+	\begin{equation}
+		\+x_k^- = \+T_{k-1,k}\+x_{k-1},~~\+Q_{x,k}^-= \+T_{k-1,k}\+Q_{x,k-1}\+T_{k-1,k}^{\mathrm{T}} + \+Q_k
+		\label{eq:eq16}
+	\end{equation} % (eq:eq16)
+	\item Gain calculation:
+	\begin{equation}
+		\+K_k = \+Q_{x,k}^-\+H_k^{\mathrm{T}}[\+R_k+\+H_k \+Q_{x,k}^-\+H_k^{\mathrm{T}}]^{-1}
+		\label{eq:eq17}
+	\end{equation} % (eq:eq17)
+	\item Measurement update
+	\begin{equation}
+		\+x_k = \+x_k^-+\+K_k[\tilde{L}_k-\+h_k(x_k^-)]
+		\label{eq:eq18}
+	\end{equation} % (eq:eq18)
+	\item Covariance update
+	\begin{equation}
+		\+Q_{x,k} = [\+I-\+K_k \+H_k]\+Q_{x,k}^-
+		\label{eq:19}
+	\end{equation} % (eq:19)
+\end{enumerate}
+% subsection kalman_filter (end)
+\subsection{Smoothing} % (fold)
+\label{sub:smoothing}
+After the Kalman Filter algorithm, we then smooth the results using the smoothed estimations for previous epochs,
+\begin{equation}
+	\hat{\+x}_k = \+x_k + \+D_k [\hat{\+x}_{k+1} - \+x_{k+1}^-]
+	\label{eq:eq28}
+\end{equation} % (eq:eq28)
+\begin{equation}
+	\+D_k = \+Q_{x,k}\+T_{k-1,k}^{T}(Q_{x,k+1}^-)^{-1}
+	\label{eq:eq29}
+\end{equation} % (eq:eq29)
+with a covariance matrix of,
+\begin{equation}
+	\hat{\+Q}_{x,k} = \+Q_{x,k}+\+D_{k}[\hat{\+Q}_{x,k+1}-\+Q_{x,k+1}^-]\+D_k^{\mathrm{T}}
+	\label{eq:eq30}
+\end{equation} % (eq:eq30)
+% subsection smoothing (end)

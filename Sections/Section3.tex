@@ -1,0 +1,33 @@
+%!TEX root = /Users/kevin/SkyDrive/KTH Work/Period 4 2014/GNSS/Labs/L4 - Kalman filtering/main.tex
+
+
+\section{Results} % (fold)
+\label{sec:results}
+A comparison of the filtered and smoothed coordinates with the original and true measurements are shown in Figure~\ref{fig:Figures_xDataPlots}. Table~\ref{tab:tableFiltered.tex} and~\ref{tab:tableSmoothed.tex} are the coordinates after filtering and smoothing.
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[width=\MyWidth]{Figures/xDataPlots.eps}
+	\caption{Comparison of filtered, smoothed, original, and true coordinates.}
+	\label{fig:Figures_xDataPlots}
+\end{figure} % (fig:Figures_xDataPlots)
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[width=\MyWidth]{Figures/vDataPlots.eps}
+	\caption{Comparison of filtered, smoothed, and true velocities.}
+	\label{fig:Figures_vDataPlots}
+\end{figure} % (fig:Figures_vDataPlots)
+\input{Tables/tableFiltered.tex}
+\input{Tables/tableSmoothed.tex}
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[width=\MyWidth]{Figures/diffPlots.eps}
+	\caption{Plot of differences between true values and the filtered and smoothed coordinates.}
+	\label{fig:Figures_diffPlots}
+\end{figure} % (fig:Figures_diffPlots)
+\begin{figure}[htbp]
+	\centering
+		\includegraphics[width=\MyWidth]{Figures/diffPlotsVelocity.eps}
+	\caption{Plot of differences between true values and the filtered and smoothed velocities.}
+	\label{fig:Figures_diffPlotsVelocity}
+\end{figure} % (fig:Figures_diffPlotsVelocity)
+% section results (end)
