@@ -5,19 +5,26 @@
 \label{sec:analysis_and_discussion}
 % In this part you should discuss your results by, for example, considering the following questions:
 \begin{itemize}
-	\item Are the results reasonable? Compare the results with your expectations.
-	
-	Yes, the results are reasonable.  The double difference observations are composed of the undifferenced phases and code pseudoranges, so we can expect the standard deviations to be greater than or equal to these as well.  For most receivers, $\sigma_{\Phi}=2~\text{mm}$ and $\sigma_P = 0.3~\text{m}$, so the double differences should give standard deviations greater than or equal to $0.3~\text{m}$.  
+	\item What happens if we change the values of 
+	\begin{itemize}
+		\item[a)] PSD?
+		
+		The value of the PSD changes the covariance matrix, $\+Q_k$, which then affects the random accelerations of the vehicle measurements.  Increasing the PSD would increase the standard deviations of our filter and smoothing results.
+		\item[b)] Standard deviations of measurements?
+		
+		Changing the standard deviations of the measurements increases the standard deviations of the filtered results but doesn't affect the smoothing results.
+		\item[c)] Standard deviations of initial state variables?
+		
+		Increasing the standard deviations of the initial state variables only affects our ability to calculate the precise location of the car at that time.  The more measurements we have, the less important the initial state becomes.
+	\end{itemize}
+
 	\item Can we draw any conclusion/implications from the results?  
 	
-	We can conclude that the approximate coordinates are very close to the true receiver position, even though we did not factor in ionospheric and tropospheric effects.  
+	We can conclude that the smoothed coordinates are a better approximation to the true values than the filtered coordinates.
 	\item Are results reliable and accurate?
 	
-	I believe the results are reliable and accurate because the $\sigma$ values is slightly greater than the change in X,Y, and Z.  We should also take into account the calculations that can be done with $\lambda_2$ values. % But the least squares method can give poor results if there are any outliers or the errors aren't Gaussian distributed.\cite{Garcia:1999:NMP:554354}
-	
-	\item Would it have been more appropriate to use another method? Does the method need to be further developed?
-	
-	I think this method could be further developed by analyzing the double differences using different reference satellites.  For example, satellite 20 was used in this report, but we should also analyze using satellites 4,5,6,24, and 25 as reference satellites and compare the differences between each of their results.
+	I believe the results are reliable and accurate because the standard deviations dropped when the coordinates were smoothed and the state vector was a better approximation of the true values. Figures~\ref{fig:Figures_diffPlots} and \ref{fig:Figures_diffPlotsVelocity} shows that the smoothed values are closer to $(0,0)$ than the filtered values.
+
 \end{itemize}
 
 % section analysis_and_discussion (end)
